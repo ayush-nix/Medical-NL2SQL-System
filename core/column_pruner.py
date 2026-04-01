@@ -23,7 +23,7 @@ from collections import defaultdict
 logger = logging.getLogger("nl2sql.column_pruner")
 
 # Always include these columns regardless of query
-ALWAYS_INCLUDE = {"id", "prediction_date", "prediction", "avalanche_probability", "risk_scale"}
+ALWAYS_INCLUDE = {"id", "prediction_date", "prediction", "avalanche_probability", "risk_scale", "compound_risk_score"}
 
 # Default top-K columns to return
 DEFAULT_TOP_K = 25
@@ -142,21 +142,28 @@ class ColumnPruner:
         }
 
     def _build_schema_text(self, columns: list) -> str:
-        """Build a compact schema representation for the LLM prompt."""
+        """Build a compact schema with inline sample values (SDE-SQL data probing)."""
         lines = [f"TABLE: {self.table_name}"]
         lines.append(f"-- {self.table_description}")
-        lines.append("")
+        lines.append("-- COLUMNS:")
 
         for col in columns:
             type_str = col.get("type", "text").upper()
-            unit = f" ({col['unit']})" if col.get("unit") else ""
-            desc = col.get("description", "")
-            range_str = ""
-            if col.get("range"):
-                r = col["range"]
-                range_str = f" [range: {r[0]}–{r[1]}]"
+            parts = [f"  {col['name']} {type_str}"]
 
-            lines.append(f"  {col['name']} {type_str}{unit} -- {desc}{range_str}")
+            # Add sample/enum values inline — critical for accuracy
+            if col.get("enum"):
+                parts.append(f"  values: {col['enum']}")
+            elif col.get("range"):
+                r = col["range"]
+                parts.append(f"  range: [{r[0]}, {r[1]}]")
+
+            # Short description
+            desc = col.get("description", "")
+            if desc:
+                parts.append(f"  -- {desc[:60]}")
+
+            lines.append(" ".join(parts))
 
         return "\n".join(lines)
 

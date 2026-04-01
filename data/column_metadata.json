@@ -74,7 +74,7 @@
       "name": "prediction",
       "display": "Prediction Label",
       "group": "Prediction",
-      "description": "Binary avalanche prediction: 1=avalanche likely, 0=safe",
+      "description": "Binary avalanche prediction: 0=safe, 1=avalanche",
       "type": "int",
       "unit": "",
       "range": [
@@ -87,6 +87,10 @@
         "forecast",
         "avalanche predicted",
         "danger"
+      ],
+      "enum": [
+        0,
+        1
       ]
     },
     {
@@ -129,7 +133,7 @@
       "name": "risk_scale",
       "display": "Risk Scale",
       "group": "Prediction",
-      "description": "Avalanche danger rating 1-5 (1=Low, 2=Moderate, 3=Considerable, 4=High, 5=Extreme)",
+      "description": "Risk level 1(lowest) to 5(highest)",
       "type": "int",
       "unit": "level",
       "range": [
@@ -142,6 +146,13 @@
         "hazard scale",
         "danger rating",
         "severity"
+      ],
+      "enum": [
+        1,
+        2,
+        3,
+        4,
+        5
       ]
     },
     {
@@ -280,7 +291,7 @@
       "group": "Satellite",
       "description": "Soil moisture profile depth measurement from satellite",
       "type": "float",
-      "unit": "m\u00c2\u00b3/m\u00c2\u00b3",
+      "unit": "mÂ³/mÂ³",
       "range": [
         0,
         1
@@ -297,7 +308,7 @@
       "group": "Satellite",
       "description": "Surface-level soil moisture content",
       "type": "float",
-      "unit": "m\u00c2\u00b3/m\u00c2\u00b3",
+      "unit": "mÂ³/mÂ³",
       "range": [
         0,
         1
@@ -567,13 +578,18 @@
         "height zone",
         "elevation band",
         "zone"
+      ],
+      "enum": [
+        "Sub-Alpine",
+        "Alpine",
+        "Nival"
       ]
     },
     {
       "name": "slope",
       "display": "Slope Angle",
       "group": "Terrain",
-      "description": "Steepness of terrain in degrees. Avalanches most common at 25-50\u00c2\u00b0",
+      "description": "Steepness of terrain in degrees. Avalanches most common at 25-50Â°",
       "type": "float",
       "unit": "degrees",
       "range": [
@@ -815,7 +831,7 @@
       "group": "Seismic",
       "description": "Rate of seismic energy flow per unit area",
       "type": "float",
-      "unit": "W/m\u00c2\u00b2",
+      "unit": "W/mÂ²",
       "range": [
         0,
         500
@@ -980,9 +996,9 @@
       "name": "snow_density",
       "display": "Snow Density",
       "group": "Snow",
-      "description": "Density of snowpack in kg/m\u00c2\u00b3. Fresh=50-100, Settled=200-400, Ice=917",
+      "description": "Density of snowpack in kg/mÂ³. Fresh=50-100, Settled=200-400, Ice=917",
       "type": "float",
-      "unit": "kg/m\u00c2\u00b3",
+      "unit": "kg/mÂ³",
       "range": [
         30,
         600
@@ -1100,7 +1116,7 @@
       "group": "Meteorological",
       "description": "Volumetric soil water content at 0-7cm",
       "type": "float",
-      "unit": "m\u00c2\u00b3/m\u00c2\u00b3",
+      "unit": "mÂ³/mÂ³",
       "range": [
         0,
         0.6
@@ -1116,7 +1132,7 @@
       "group": "Meteorological",
       "description": "Volumetric soil water at 7-28cm",
       "type": "float",
-      "unit": "m\u00c2\u00b3/m\u00c2\u00b3",
+      "unit": "mÂ³/mÂ³",
       "range": [
         0,
         0.6
@@ -1131,7 +1147,7 @@
       "group": "Meteorological",
       "description": "Volumetric soil water at 28-100cm",
       "type": "float",
-      "unit": "m\u00c2\u00b3/m\u00c2\u00b3",
+      "unit": "mÂ³/mÂ³",
       "range": [
         0,
         0.6
@@ -1146,7 +1162,7 @@
       "group": "Meteorological",
       "description": "Volumetric soil water at 100-255cm",
       "type": "float",
-      "unit": "m\u00c2\u00b3/m\u00c2\u00b3",
+      "unit": "mÂ³/mÂ³",
       "range": [
         0,
         0.6
@@ -1176,7 +1192,7 @@
       "group": "Meteorological",
       "description": "Energy transfer via evaporation/condensation at the surface",
       "type": "float",
-      "unit": "W/m\u00c2\u00b2",
+      "unit": "W/mÂ²",
       "range": [
         -200,
         50
@@ -1192,7 +1208,7 @@
       "group": "Meteorological",
       "description": "Net shortwave radiation absorbed by the surface",
       "type": "float",
-      "unit": "W/m\u00c2\u00b2",
+      "unit": "W/mÂ²",
       "range": [
         0,
         400
@@ -1209,7 +1225,7 @@
       "group": "Meteorological",
       "description": "Net longwave radiation emitted by the surface",
       "type": "float",
-      "unit": "W/m\u00c2\u00b2",
+      "unit": "W/mÂ²",
       "range": [
         -300,
         0
@@ -1225,7 +1241,7 @@
       "group": "Meteorological",
       "description": "Direct heat exchange between surface and atmosphere",
       "type": "float",
-      "unit": "W/m\u00c2\u00b2",
+      "unit": "W/mÂ²",
       "range": [
         -150,
         100
@@ -1241,7 +1257,7 @@
       "group": "Meteorological",
       "description": "Total solar radiation reaching the surface",
       "type": "float",
-      "unit": "W/m\u00c2\u00b2",
+      "unit": "W/mÂ²",
       "range": [
         0,
         500
@@ -1258,7 +1274,7 @@
       "group": "Meteorological",
       "description": "Downward longwave radiation from the atmosphere",
       "type": "float",
-      "unit": "W/m\u00c2\u00b2",
+      "unit": "W/mÂ²",
       "range": [
         100,
         400
@@ -1456,7 +1472,7 @@
       "group": "Meteorological",
       "description": "Leaf area index of high vegetation",
       "type": "float",
-      "unit": "m\u00c2\u00b2/m\u00c2\u00b2",
+      "unit": "mÂ²/mÂ²",
       "range": [
         0,
         6
@@ -1473,7 +1489,7 @@
       "group": "Meteorological",
       "description": "Leaf area index of low vegetation",
       "type": "float",
-      "unit": "m\u00c2\u00b2/m\u00c2\u00b2",
+      "unit": "mÂ²/mÂ²",
       "range": [
         0,
         4
@@ -1657,7 +1673,7 @@
       "group": "Meteorological",
       "description": "Air temperature at 2m in Celsius",
       "type": "float",
-      "unit": "\u00c2\u00b0C",
+      "unit": "Â°C",
       "range": [
         -40,
         10
@@ -1675,7 +1691,7 @@
       "group": "Derived",
       "description": "Temperature change over 24 hours (positive=warming)",
       "type": "float",
-      "unit": "\u00c2\u00b0C",
+      "unit": "Â°C",
       "range": [
         -20,
         20
@@ -1743,7 +1759,7 @@
       "name": "temp_positive",
       "display": "Above-Freezing Flag",
       "group": "Derived",
-      "description": "1 if temperature is above 0\u00c2\u00b0C (freezing point), 0 otherwise",
+      "description": "Binary: 1 if temp above 0C, else 0",
       "type": "int",
       "unit": "",
       "range": [
@@ -1755,15 +1771,19 @@
         "warm",
         "melting conditions",
         "thaw"
+      ],
+      "enum": [
+        0,
+        1
       ]
     },
     {
       "name": "positive_degree_days_3d",
       "display": "Positive Degree Days (3d)",
       "group": "Derived",
-      "description": "Sum of degrees above 0\u00c2\u00b0C over 3 days \u00e2\u20ac\u201d melt potential indicator",
+      "description": "Sum of degrees above 0Â°C over 3 days â€” melt potential indicator",
       "type": "float",
-      "unit": "\u00c2\u00b0C\u00c2\u00b7days",
+      "unit": "Â°CÂ·days",
       "range": [
         0,
         30
@@ -1778,7 +1798,7 @@
       "name": "wind_direction",
       "display": "Wind Direction",
       "group": "Meteorological",
-      "description": "Direction wind is coming from (0-360\u00c2\u00b0, 0=North)",
+      "description": "Direction wind is coming from (0-360Â°, 0=North)",
       "type": "float",
       "unit": "degrees",
       "range": [
@@ -1844,7 +1864,7 @@
       "name": "wind_slope_interaction",
       "display": "Wind-Slope Interaction",
       "group": "Derived",
-      "description": "Product of wind speed and slope angle \u00e2\u20ac\u201d indicates wind-loaded avalanche risk",
+      "description": "Product of wind speed and slope angle â€” indicates wind-loaded avalanche risk",
       "type": "float",
       "unit": "",
       "range": [
@@ -1894,7 +1914,7 @@
       "name": "rain_on_snow_ratio",
       "display": "Rain-on-Snow Ratio",
       "group": "Derived",
-      "description": "Ratio of liquid precip to snow precip \u00e2\u20ac\u201d critical avalanche trigger",
+      "description": "Ratio of liquid precip to snow precip â€” critical avalanche trigger",
       "type": "float",
       "unit": "ratio",
       "range": [
@@ -2036,6 +2056,10 @@
         "real outcome",
         "did avalanche happen",
         "ground truth"
+      ],
+      "enum": [
+        0,
+        1
       ]
     },
     {
@@ -2068,6 +2092,10 @@
       "synonyms": [
         "warm rain",
         "rain on snow flag"
+      ],
+      "enum": [
+        0,
+        1
       ]
     },
     {
@@ -2100,6 +2128,12 @@
         "slope wind risk",
         "wind slope danger",
         "critical wind"
+      ],
+      "enum": [
+        "LOW",
+        "MODERATE",
+        "HIGH",
+        "EXTREME"
       ]
     },
     {
@@ -2134,6 +2168,10 @@
         "rapid snow",
         "fast loading",
         "critical loading"
+      ],
+      "enum": [
+        0,
+        1
       ]
     },
     {
@@ -2142,7 +2180,7 @@
       "group": "Risk",
       "description": "Magnitude of freeze-thaw temperature cycling",
       "type": "float",
-      "unit": "\u00c2\u00b0C",
+      "unit": "Â°C",
       "range": [
         0,
         25
@@ -2167,13 +2205,17 @@
       "synonyms": [
         "freeze thaw active",
         "thaw refreeze"
+      ],
+      "enum": [
+        0,
+        1
       ]
     },
     {
       "name": "south_facing",
       "display": "South-Facing Flag",
       "group": "Terrain",
-      "description": "1 if slope faces south (more solar radiation, more melt risk)",
+      "description": "Binary: 1 if slope faces south (135-225 degrees)",
       "type": "int",
       "unit": "",
       "range": [
@@ -2184,6 +2226,10 @@
         "south facing",
         "sun exposed",
         "sunny slope"
+      ],
+      "enum": [
+        0,
+        1
       ]
     },
     {
@@ -2325,7 +2371,7 @@
       "group": "Derived",
       "description": "Temperature change over 6 hours",
       "type": "float",
-      "unit": "\u00c2\u00b0C",
+      "unit": "Â°C",
       "range": [
         -15,
         15
@@ -2342,7 +2388,7 @@
       "group": "Derived",
       "description": "Rate of temperature change per hour over 6 hours",
       "type": "float",
-      "unit": "\u00c2\u00b0C/hr",
+      "unit": "Â°C/hr",
       "range": [
         -3,
         3
@@ -2358,7 +2404,7 @@
       "group": "Derived",
       "description": "Temperature trend over 3 days (positive=warming)",
       "type": "float",
-      "unit": "\u00c2\u00b0C",
+      "unit": "Â°C",
       "range": [
         -15,
         15
@@ -2376,7 +2422,7 @@
       "group": "Derived",
       "description": "Temperature trend over 7 days",
       "type": "float",
-      "unit": "\u00c2\u00b0C",
+      "unit": "Â°C",
       "range": [
         -20,
         20
@@ -2472,7 +2518,7 @@
       "name": "temp_precip_interaction",
       "display": "Temp-Precip Interaction",
       "group": "Derived",
-      "description": "Product of temperature deviation and precipitation \u00e2\u20ac\u201d indicates wet avalanche risk",
+      "description": "Product of temperature deviation and precipitation â€” indicates wet avalanche risk",
       "type": "float",
       "unit": "",
       "range": [

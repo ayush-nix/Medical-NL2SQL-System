@@ -19,6 +19,23 @@ class LLMManager:
         self.client = httpx.Client(timeout=300.0)
         self.async_client = httpx.AsyncClient(timeout=300.0)
 
+    def warmup_models(self):
+        """Pre-load SQL and Brain models into memory with keep_alive=-1.
+        This prevents model swapping latency between pipeline stages."""
+        for model in [Config.SQL_MODEL, Config.FAST_MODEL]:
+            try:
+                resp = self.client.post(
+                    f"{self.base_url}/api/generate",
+                    json={"model": model, "prompt": "", "keep_alive": -1},
+                    timeout=120.0,
+                )
+                if resp.status_code == 200:
+                    logger.info(f"Model pre-warmed: {model} (keep_alive=-1)")
+                else:
+                    logger.warning(f"Warmup returned {resp.status_code} for {model}")
+            except Exception as e:
+                logger.warning(f"Could not warm up {model}: {e}")
+
     async def generate(self, prompt: str, model: str = None,
                        temperature: float = None,
                        num_ctx: int = None) -> str:
@@ -31,6 +48,7 @@ class LLMManager:
             "model": model,
             "prompt": prompt,
             "stream": False,
+            "keep_alive": -1,  # Keep model loaded — prevents swap latency
             "options": {
                 "temperature": temperature,
                 "num_ctx": num_ctx,

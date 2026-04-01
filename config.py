@@ -25,8 +25,8 @@ class Config:
     # │  To swap: ollama pull <model> then update env vars      │
     # └─────────────────────────────────────────────────────────┘
 
-    # Primary SQL generation model (Coder Model — dedicated SQL specialist)
-    SQL_MODEL = os.getenv("SQL_MODEL", "sqlcoder:latest")
+    # Primary SQL generation model (Coder Model — SQLCoder, fine-tuned for text2sql)
+    SQL_MODEL = os.getenv("SQL_MODEL", "sqlcoder:7b")
     # Fallback for complex queries
     FALLBACK_MODEL = os.getenv("FALLBACK_MODEL", "mistral:latest")
     # Fast model for planner, linker, critic, synthesis (Brain Model)
@@ -36,9 +36,9 @@ class Config:
 
     # ── Generation Parameters ────────────────────────────────────
     SQL_TEMPERATURE = 0.0       # Deterministic SQL generation
-    SQL_NUM_CTX = 8192          # Context window for SQL model
-    FAST_NUM_CTX = 4096         # Context for planner/linker/critic
-    FALLBACK_NUM_CTX = 16384    # Larger context for fallback model
+    SQL_NUM_CTX = 4096          # Context window for SQL model (focused single-table)
+    FAST_NUM_CTX = 2048         # Context for planner/linker/critic (speed)
+    FALLBACK_NUM_CTX = 8192     # Larger context for fallback model
 
     # ── SQL Execution Safety ─────────────────────────────────────
     QUERY_TIMEOUT_SECONDS = 30

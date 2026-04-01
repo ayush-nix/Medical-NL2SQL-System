@@ -116,6 +116,15 @@ golden_tester = GoldenPairTester(
 )
 feedback = FeedbackLoop()
 
+# ── Pre-warm models (keep both in memory to avoid swap latency) ──
+from models.llm_manager import llm_manager as _llm
+try:
+    logger.info("Pre-warming LLM models (keep_alive=-1)...")
+    _llm.warmup_models()
+    logger.info("Models pre-warmed — swap latency minimized")
+except Exception as _e:
+    logger.warning(f"Model warmup failed (non-critical): {_e}")
+
 # ── State ────────────────────────────────────────────────────
 app_state = {
     "schema_loaded": False,
@@ -397,24 +406,31 @@ async def query(req: QueryRequest):
     route = confidence_router.classify(preprocessed, num_tables=len(metadata.tables))
     logger.info(f"Route: {route['complexity_level']} (score={route['complexity_score']})")
 
-    # ── Layer 1.5: Planner (graceful — works without it) ─────
+    # ── Layer 1.5: Planner (SKIP for single-table — saves ~10s) ─
     plan_context = ""
     planned_question = preprocessed
-    try:
-        table_summaries = [
-            f"{t} ({', '.join(c.name for c in metadata.columns.get(t, [])[:10])})"
-            for t in metadata.tables
-        ]
-        plan = await planner.plan(preprocessed, table_summaries)
-        plan_context = planner.build_plan_context(plan)
-        planned_question = plan.get("rewritten_question", preprocessed) or preprocessed
-        logger.info(f"Plan: intent={plan.get('intent')}, steps={len(plan.get('steps', []))}")
-    except Exception as plan_err:
-        logger.warning(f"Planner skipped (non-critical): {plan_err}")
+    if len(metadata.tables) > 1:
+        try:
+            table_summaries = [
+                f"{t} ({', '.join(c.name for c in metadata.columns.get(t, [])[:10])})"
+                for t in metadata.tables
+            ]
+            plan = await planner.plan(preprocessed, table_summaries)
+            plan_context = planner.build_plan_context(plan)
+            planned_question = plan.get("rewritten_question", preprocessed) or preprocessed
+            logger.info(f"Plan: intent={plan.get('intent')}, steps={len(plan.get('steps', []))}")
+        except Exception as plan_err:
+            logger.warning(f"Planner skipped (non-critical): {plan_err}")
+    else:
+        logger.info("Planner SKIPPED (single-table optimization)")
 
-    # ── Layer 2: Schema Linking (skipped for SIMPLE queries) ──
+    # ── Layer 2: Schema Linking ────────────────────────────────
+    # Re-enabled: maps vague user terms → exact column names
+    # Models stay loaded via keep_alive=-1, so no swap penalty
     linked_question = planned_question
     target_tables = list(metadata.tables)
+    single_table = len(metadata.tables) == 1
+
     if route["skip_schema_linking"]:
         logger.info("Schema linking SKIPPED (simple query — confidence routing)")
     else:
@@ -433,7 +449,7 @@ async def query(req: QueryRequest):
         pruned = column_pruner.prune(preprocessed)
         schema_text = pruned["schema_text"]
         relationships_text = ""
-        sample_values = "No samples — see column ranges in schema."
+        sample_values = ""
         join_hints = ""
         logger.info(
             f"Column pruning: {pruned['pruned_count']}/{pruned['total_columns']} "
@@ -451,7 +467,7 @@ async def query(req: QueryRequest):
             tbl = key.split(".")[0]
             if tbl in augmented_tables:
                 sample_lines.append(f"{key}: {vals[:3]}")
-        sample_values = "\n".join(sample_lines[:30]) if sample_lines else "No samples available."
+        sample_values = "\n".join(sample_lines[:30]) if sample_lines else ""
         join_hints_list = metadata.table_graph.get_join_hints(list(augmented_tables))
         join_hints = "\n".join(join_hints_list) if join_hints_list else ""
 
@@ -459,7 +475,7 @@ async def query(req: QueryRequest):
     for ex in feedback.get_learned_examples():
         generator.add_few_shot(ex["question"], ex["sql"])
 
-    # ── Layer 4: SQL Generation ──────────────────────────────
+    # ── Layer 4: SQL Generation (ONLY LLM call for single-table) ──
     gen_result = await generator.generate(
         question=linked_question,
         schema_text=schema_text,
@@ -513,7 +529,7 @@ async def query(req: QueryRequest):
 
     execution_time = exec_result.get("execution_time_ms", 0)
 
-    # ── Stage 7: Synthesize answer ───────────────────────────
+    # ── Stage 7: Synthesize answer (LLM — models stay loaded via keep_alive) ──
     answer = ""
     if exec_result.get("success"):
         try:
@@ -522,8 +538,8 @@ async def query(req: QueryRequest):
                 sql=sql,
                 results=exec_result,
             )
-        except Exception as e:
-            logger.error(f"Synthesis error: {e}")
+        except Exception as synth_err:
+            logger.warning(f"Synthesis fallback: {synth_err}")
             answer = synthesizer._fallback_answer(
                 exec_result.get("columns", []),
                 exec_result.get("rows", []),
@@ -544,22 +560,8 @@ async def query(req: QueryRequest):
 
     total_time = int((time.time() - total_start) * 1000)
 
-    # ── Layer 7: Async Evaluation (non-blocking) ─────────────
+    # ── Evaluation: SKIP for now (saves ~10-15s model swap) ──
     evaluation = {}
-    if exec_result.get("success") and answer:
-        try:
-            eval_scores = await judge.judge(
-                question=question, sql=sql,
-                results=exec_result, answer=answer,
-            )
-            evaluation = eval_scores
-            # Feed into feedback loop
-            feedback.process_feedback(
-                question=question, sql=sql, answer=answer,
-                results=exec_result, judge_scores=eval_scores,
-            )
-        except Exception as eval_err:
-            logger.warning(f"Evaluation error (non-blocking): {eval_err}")
 
     response_data = {
         "question": question,
