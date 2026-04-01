@@ -43,7 +43,7 @@ class Config:
     # ── SQL Execution Safety ─────────────────────────────────────
     QUERY_TIMEOUT_SECONDS = 30
     MAX_RESULT_ROWS = 10_000
-    MAX_RETRIES = 2  # Self-correction retries
+    MAX_RETRIES = 1  # One self-correction attempt (column validator suggests fix)
 
     # ── Database Connection ──────────────────────────────────────
     # Will be configured at startup via API or connection string

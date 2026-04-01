@@ -142,30 +142,32 @@ class ColumnPruner:
         }
 
     def _build_schema_text(self, columns: list) -> str:
-        """Build a compact schema with inline sample values (SDE-SQL data probing)."""
-        lines = [f"TABLE: {self.table_name}"]
-        lines.append(f"-- {self.table_description}")
-        lines.append("-- COLUMNS:")
-
+        """Build CREATE TABLE DDL — the format SQL models are trained on."""
+        col_defs = []
         for col in columns:
-            type_str = col.get("type", "text").upper()
-            parts = [f"  {col['name']} {type_str}"]
-
-            # Add sample/enum values inline — critical for accuracy
+            type_str = col.get("type", "TEXT").upper()
+            # Map our types to SQL types
+            type_map = {"FLOAT": "REAL", "STRING": "TEXT", "INT": "INTEGER"}
+            sql_type = type_map.get(type_str, type_str)
+            
+            comment_parts = []
             if col.get("enum"):
-                parts.append(f"  values: {col['enum']}")
+                comment_parts.append(f"values: {col['enum']}")
             elif col.get("range"):
                 r = col["range"]
-                parts.append(f"  range: [{r[0]}, {r[1]}]")
-
-            # Short description
+                comment_parts.append(f"range: [{r[0]},{r[1]}]")
+            
             desc = col.get("description", "")
             if desc:
-                parts.append(f"  -- {desc[:60]}")
+                comment_parts.append(desc[:50])
+            
+            comment = f" -- {'; '.join(comment_parts)}" if comment_parts else ""
+            col_defs.append(f"  {col['name']} {sql_type}{comment}")
 
-            lines.append(" ".join(parts))
-
-        return "\n".join(lines)
+        ddl = f"CREATE TABLE {self.table_name} (\n"
+        ddl += ",\n".join(col_defs)
+        ddl += "\n);"
+        return ddl
 
     def get_column_groups(self) -> dict:
         """Get columns organized by semantic group."""

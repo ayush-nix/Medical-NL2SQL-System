@@ -88,7 +88,7 @@ class ConfidenceRouter:
         # Route decision
         if total_complexity == 0 and self._is_simple(q):
             level = "SIMPLE"
-            skip_schema_linking = True
+            skip_schema_linking = False  # Always link — fast via domain dict
             use_extended_context = False
             confidence = 0.9
         elif total_complexity <= 2:

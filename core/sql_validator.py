@@ -163,7 +163,8 @@ def _pass2_safety(sql: str) -> ValidationResult:
 
 
 def _pass3_schema(sql: str, schema_metadata) -> ValidationResult:
-    """Verify all referenced tables and columns actually exist."""
+    """Verify all referenced tables AND columns actually exist.
+    If a column is wrong, suggest the closest valid column name."""
     try:
         parsed = sqlglot.parse_one(sql)
 
@@ -178,16 +179,78 @@ def _pass3_schema(sql: str, schema_metadata) -> ValidationResult:
                 if table_name not in known_tables:
                     return ValidationResult(
                         passed=False,
-                        error=f"Table '{table_name}' does not exist in the "
-                              f"database. Available tables: "
-                              f"{', '.join(sorted(known_tables))}",
+                        error=f"Table '{table_name}' does not exist. "
+                              f"Available tables: {', '.join(sorted(known_tables))}",
                         pass_number=3
                     )
+
+        # ── Column name validation (catches hallucinated columns) ──
+        # Build set of all valid column names across all tables
+        valid_columns = set()
+        for table_name in schema_metadata.tables:
+            for col in schema_metadata.columns.get(table_name, []):
+                valid_columns.add(col.name.lower())
+
+        # Extract all column references from the SQL
+        for col_ref in parsed.find_all(exp.Column):
+            col_name = col_ref.name.lower()
+            if not col_name:
+                continue
+            # Skip if it's a known alias (like 'rn', 'avg_prob', etc.)
+            if col_name in valid_columns:
+                continue
+            # Skip * and aggregation aliases
+            if col_name in ('*',):
+                continue
+            # It's a hallucinated column — find closest match
+            closest = _find_closest_column(col_name, valid_columns)
+            suggestion = f" Did you mean '{closest}'?" if closest else ""
+            return ValidationResult(
+                passed=False,
+                error=f"Column '{col_name}' does not exist in the database.{suggestion} "
+                      f"Use ONLY exact column names from the schema.",
+                pass_number=3
+            )
 
         return ValidationResult(passed=True, pass_number=3)
     except Exception as e:
         # Don't block on schema check failures — let execution handle it
         return ValidationResult(passed=True, pass_number=3)
+
+
+def _find_closest_column(bad_name: str, valid_columns: set) -> str:
+    """Find the closest valid column name using simple similarity.
+    Uses longest common subsequence ratio."""
+    best = ""
+    best_score = 0
+    bad_lower = bad_name.lower().replace("_", "")
+
+    for valid in valid_columns:
+        valid_flat = valid.lower().replace("_", "")
+        # Simple: check if all chars of bad_name exist in valid (order preserved)
+        score = 0
+        # Character overlap ratio
+        common = set(bad_lower) & set(valid_flat)
+        if not common:
+            continue
+        score = len(common) / max(len(bad_lower), len(valid_flat))
+        # Bonus for same prefix
+        prefix_len = 0
+        for a, b in zip(bad_lower, valid_flat):
+            if a == b:
+                prefix_len += 1
+            else:
+                break
+        score += prefix_len * 0.1
+        # Bonus for similar length
+        if abs(len(bad_lower) - len(valid_flat)) <= 2:
+            score += 0.2
+
+        if score > best_score:
+            best_score = score
+            best = valid
+
+    return best if best_score > 0.5 else ""
 
 
 def _pass4_joins(sql: str, schema_metadata) -> ValidationResult:

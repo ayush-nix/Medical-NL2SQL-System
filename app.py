@@ -433,6 +433,19 @@ async def query(req: QueryRequest):
 
     if route["skip_schema_linking"]:
         logger.info("Schema linking SKIPPED (simple query — confidence routing)")
+    elif single_table:
+        # FAST PATH: domain dict only (no LLM call, instant)
+        try:
+            mapped, _ = schema_linker._dict_lookup(planned_question)
+            if mapped:
+                for term, (col, cond) in mapped.items():
+                    if col:
+                        linked_question = linked_question.replace(term, col)
+                logger.info(f"Schema linked (dict-only): {len(mapped)} terms mapped")
+            else:
+                logger.info("Schema linking: no dict matches, using raw question")
+        except Exception as link_err:
+            logger.warning(f"Dict linking error: {link_err}")
     else:
         try:
             linked = await schema_linker.link(planned_question, metadata)
@@ -529,7 +542,7 @@ async def query(req: QueryRequest):
 
     execution_time = exec_result.get("execution_time_ms", 0)
 
-    # ── Stage 7: Synthesize answer (LLM — models stay loaded via keep_alive) ──
+    # ── Stage 7: Answer (smart template — no model swap, instant) ──
     answer = ""
     if exec_result.get("success"):
         try:
@@ -537,6 +550,7 @@ async def query(req: QueryRequest):
                 question=preprocessed,
                 sql=sql,
                 results=exec_result,
+                use_llm=False,  # Fast mode — no model swap
             )
         except Exception as synth_err:
             logger.warning(f"Synthesis fallback: {synth_err}")

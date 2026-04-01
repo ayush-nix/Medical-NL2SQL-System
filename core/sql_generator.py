@@ -35,9 +35,19 @@ Generate a SQL query to answer the following question:
 
 {business_hints}
 
+### Examples
+Question: Show all records where avalanche probability is greater than 0.8
+SQL: SELECT * FROM avalanche_data WHERE avalanche_probability > 0.8 ORDER BY avalanche_probability DESC
+
+Question: What is the average avalanche probability for each risk scale?
+SQL: SELECT risk_scale, AVG(avalanche_probability) AS avg_prob, COUNT(*) AS count FROM avalanche_data GROUP BY risk_scale ORDER BY risk_scale
+
+Question: Find records where snow depth increased and temperature is rising
+SQL: SELECT id, prediction_date, snow_depth_change_48h, temp_trend_7d, compound_risk_score FROM avalanche_data WHERE snow_depth_change_48h > 0 AND temp_trend_7d > 0
+
 ### Rules
 1. Generate ONLY a SELECT statement.
-2. Use EXACT column and table names from the schema. Do NOT invent names.
+2. Use EXACT column names from the CREATE TABLE above. Do NOT invent column names.
 3. Use SQLite syntax: strftime(), substr(), ||, LIMIT (not TOP).
 4. Return ONLY the SQL query — no explanation, no markdown fences.
 
@@ -51,9 +61,11 @@ Generate a SQL query to answer the following question:
 Error: {error}
 
 Question: "{question}"
-Schema: {schema}
 
-Fix the SQL. Use only columns from the schema. Return ONLY the corrected SQL:
+{schema}
+
+IMPORTANT: Use ONLY the exact column names from the CREATE TABLE above.
+Return ONLY the corrected SQL query:
 """
 
     def __init__(self):
