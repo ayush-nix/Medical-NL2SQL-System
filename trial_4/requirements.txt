@@ -1,0 +1,19 @@
+# Prakshepan NL2SQL Intelligence Engine v3.1
+# Air-gapped deployment — all packages must be pre-downloaded as wheels
+
+# ── Core Web Framework ───────────────────────────────────────
+fastapi>=0.100.0
+uvicorn>=0.23.0
+python-multipart>=0.0.6         # File upload support
+
+# ── HTTP Client (Ollama communication) ───────────────────────
+httpx>=0.24.0
+
+# ── Data Validation ──────────────────────────────────────────
+pydantic>=2.0.0
+
+# ── SQL Parsing & AST Validation ─────────────────────────────
+sqlglot>=18.0.0                 # AST-level SQL validation (Pass 1-6)
+
+# ── Text Processing ──────────────────────────────────────────
+jellyfish>=1.0.0                # Jaro-Winkler fuzzy matching for column resolution

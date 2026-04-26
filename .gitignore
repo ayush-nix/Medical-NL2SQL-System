@@ -1,34 +1,12 @@
-# Python
+# Large data files
+DATA1/
+*.xlsx
+*.csv
+*.db
+*.sqlite
+cleaned_data/
 __pycache__/
 *.pyc
-*.pyo
-*.egg-info/
-dist/
-build/
-.eggs/
-
-# Virtual environments
-venv/
-.venv/
-env/
-
-# IDE
-.vscode/
-.idea/
-*.swp
-*.swo
-*~
-
-# OS
-.DS_Store
-Thumbs.db
-
-# Data files (keep golden_pairs, ignore learned data)
-data/learned_examples.json
-data/flagged_for_review.json
-
-# Logs
-*.log
-
-# Test data (optional — remove this line to track test CSVs)
-# test_data/
+.env
+*.pdf
+node_modules/

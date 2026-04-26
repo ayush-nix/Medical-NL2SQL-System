@@ -1,0 +1,28 @@
+# Environments
+venv/
+env/
+.env
+
+# Data and Models
+DATA/
+test_data/
+medical/cleaned_data/*.csv
+medical/cleaned_data/*.db
+medical/cleaned_data/*.db-journal
+
+# Python caching & logs
+__pycache__/
+*.pyc
+.pytest_cache/
+*.log
+server.log
+
+# Medical data exceptions (if any)
+*.xlsx
+
+# Idea / editor config
+.idea/
+.vscode/
+
+# Antigravity artifacts
+.gemini/
